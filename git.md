@@ -25,4 +25,4 @@
 
 当add之后撤回 git reset HEAD
 
-不想要本地的修改，回退到上次的commit git clean -force
+不想要本地的修改，回退到上次的commit git clean -f
