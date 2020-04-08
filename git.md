@@ -28,6 +28,6 @@
 不想要本地的修改，回退到上次的commit git clean -f
 
 git add .或者git add filename
-git commit -m '备注'
+git commit -m'备注'
 git pull origin branch
 git push origin branch
