@@ -20,3 +20,7 @@
 查看特定文件的提交记录 git log 文件
 
 回滚到指定的版本 git reset --hard 版本号
+
+强推到远程 git push origin branchname --force
+
+当add之后撤回 git reset HEAD
