@@ -6,7 +6,8 @@ Vue.use(Vuex)
 // 创建vuex实例
 const store = new Vuex.Store({
     state:{
-        count:2
+        count:2,
+        stage:0
     },
     mutations:{
         muCount:function(state){
