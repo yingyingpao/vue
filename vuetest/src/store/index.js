@@ -10,6 +10,12 @@ const store = new Vuex.Store({
         stage:0
     },
     mutations:{
+        addStage(state){
+            state.stage++;
+        },
+        addInfinite(state,num){
+            state.stage+=num;
+        },
         muCount:function(state){
             console.log(state)
             state.count++;
