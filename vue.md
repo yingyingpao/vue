@@ -77,6 +77,7 @@
 
 ## import和require的区别 ##
 
+
 import和require都是被模块化使用
 	
 		1.a.require是CommonJs的语法（AMD规范引入方式），CommonJs的模块是对象。
