@@ -7,6 +7,7 @@ import router from './router'
 import store from './store'
 
 Vue.config.productionTip = false
+// window.Bus = new Vue;
 
 console.log(store)
 

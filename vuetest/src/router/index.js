@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import addSub from '@/components/addSub'
+import directives from '@/components/directives'
 
 Vue.use(Router)
 
@@ -8,8 +8,8 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'addSub',
-      component: addSub
+      name: 'directives',
+      component: directives
     }
   ]
 })
