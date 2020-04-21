@@ -1,13 +1,18 @@
 <template>
     <div>
-        <p>现在的值为:{{stage}}</p>
-        <button @click='addHandle'>+1 </button>
-        <button @click='addInfinite'>+N</button>
+        <h3>加法</h3>
+        <h5>{{$store.getters.showCount}}</h5>
+        <h5>{{showCount}}</h5>
+        {{count}}
+        <button @click='addHandler'>点击</button>
+        <button @click='addHandlerAsync'>async 点击</button>
+        <button @click='addNAsync'>async 点击</button>
+        <button @click='addNasyncAction(6)'>点击</button>
     </div>
 </template>
 
 <script>
-import {mapState} from 'vuex'
+import {mapMutations, mapState,mapActions,mapGetters} from 'vuex'
 export default {
     name:'add',
     data:function(){
@@ -15,19 +20,22 @@ export default {
         }
     },
     methods:{
-        addHandle(){
-            console.log(this.$store.state.stage)
-            // 不能直接修改state中的值
-            // this.$store.state.stage++;
-            this.$store.commit('addStage');
+        ...mapMutations(['addNum']),
+        ...mapActions(['addNasyncAction']),
+        addHandler(){
+            this.addNum()
         },
-        addInfinite(){
-            // commit的作用就是调用某个mutation函数
-            this.$store.commit('addInfinite',2)
+        addHandlerAsync(){
+            // 这里的dispatch函数，专门用来触发action
+            this.$store.dispatch('addNumAsyncAction')
+        },
+        addNAsync(){
+            this.$store.dispatch('addNasyncAction',4)
         }
     },
     computed: {
-        ...mapState(['stage'])
+        ...mapState(['count']),
+        ...mapGetters(['showCount'])
     },
 }
 </script>

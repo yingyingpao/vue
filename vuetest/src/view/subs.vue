@@ -1,5 +1,7 @@
 <template>
-    <div>add</div>
+    <div>
+        <h3>减法</h3>
+    </div>
 </template>
 
 <script>
@@ -9,6 +11,10 @@ export default {
         return {
             
         }
+    },
+    methods:{
+    },
+    computed:{
     }
 }
 </script>

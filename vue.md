@@ -77,7 +77,6 @@
 
 ## import和require的区别 ##
 
-
 import和require都是被模块化使用
 	
 		1.a.require是CommonJs的语法（AMD规范引入方式），CommonJs的模块是对象。
@@ -96,8 +95,7 @@ import和require都是被模块化使用
 
    module.exports=a
 	
-	2.  import / export
-	3.  
+		2.import / export 
   import a from 'a'
 
   import { default as a  } from 'a'
@@ -108,7 +106,10 @@ import和require都是被模块化使用
 
   import { fun1 as myfunction  } from 'a'
 
-  import a, { fun1  } from 'a'               
+  import a, { fun1  } from 'a'      
+
+
+export、export default的区别         
 
  
 

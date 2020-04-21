@@ -9,6 +9,7 @@
     
 </style>
 <script>
+import {a,aaa} from '../router/expor'
 import bus from './eventBus1'
 import buses from './eventBus2'
 export default {
@@ -35,6 +36,9 @@ export default {
                 el.style.background='red';
             }
         }
+    },
+    created(){
+        console.log(a(),aaa)
     }
 }
 </script>
