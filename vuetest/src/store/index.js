@@ -12,7 +12,9 @@ const store = new Vuex.Store({
         // 页面的input框
         inputVal:'aaa',
         // 新数据的id
-        newId:5
+        newId:5,
+        // 默认绑定所有
+        type:'all'
     },
     mutations:{
         listMutation(state,list){
@@ -41,6 +43,10 @@ const store = new Vuex.Store({
             let i = state.list.findIndex(index => index.id == item);
             state.list.splice(i,1);
             // state.list[i].done = !state.list[i].done;
+        },
+        // tab点击
+        changeType(state,type){
+            state.type=type;
         }
     },
     actions:{
@@ -49,11 +55,24 @@ const store = new Vuex.Store({
                 console.log(data.data)
                 context.commit('listMutation', data.data)
             })
-
         }
     },
     getters:{
+        // 未完成数量
+        showComplete(state){
+            return state.list.filter(x=>x.done===false).length
+        },
+        showList(state){
+            let {type} = state;
+            if(type=='all'){
+                return state.list;
+            } else if (type == 'albind') {
+                return state.list.filter(x=>x.done);
+            } else if (type == 'unalbind') {
+                return state.list.filter(x => !x.done);
+            }
 
+        }
     }
 })
 export default store;
