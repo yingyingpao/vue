@@ -39,3 +39,13 @@ findIndex()函数也是查找目标元素，找到就返回元素位置，找不
 	console.log(a==b,Object.is(a,b))  //true false
 	console.log(NaN==NaN,Object.is(NaN,NaN)) //false true
 	console.log(+0==-0,+0===-0,Object.is(+0,-0)) //true true false
+
+## 对象 ##
+
+ES6允许直接写入变量和函数，作为对象的属性和方法.
+
+	属性名变为变量名，属性值变为变量值
+	let aa = 'bar'
+	console.log(aa) //baz
+	let baz = {aa}
+	console.log(baz) //{foo:'baz'}
