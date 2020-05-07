@@ -6,6 +6,8 @@ import router from './router'
 // 引入vuex
 import store from './store'
 
+import '@/assets/font/iconfont.css'
+
 import Ant from "ant-design-vue"
 import "ant-design-vue/dist/antd.css"
 Vue.use(Ant)

@@ -33,9 +33,10 @@
           <h5>画笔大小</h5>
           <span
             v-for="pen in brushs"
+            class='iconfont'
             :class="[pen.className,{'active': config.lineWidth === pen.lineWidth}]"
             @click="setBrush(pen.lineWidth)"
-          >12</span>
+          >&#xe676;</span>
         </div>
         <!--操作-->
         <div id="canvas-control">
@@ -43,21 +44,31 @@
           <span
             v-for="control in controls"
             :title="control.title"
+            class='iconfont'
             :class="control.className"
             @click="controlCanvas(control.action)"
-          >23</span>
+            v-html='control.text'
+          ></span>
         </div>
         <!--形状-->
-        <div id="canvas-control">
-          <h5>操作</h5>
-            <span @click='strightLine'>直线</span>
-            <span @click='rectangle'>矩形</span>
-            <span @click='circular'>圆</span>
+        <div id="canvas-shape">
+          <h5>形状</h5>
+            <span @click='brushHandler' class='iconfont' :class="{active:shapeStatus==0}">&#xe676;</span>
+            <span @click='strightLine' class='iconfont' :class="{active:shapeStatus==1}">&#xe68d;</span>
+            <span @click='rectangle' class='iconfont' :class="{active:shapeStatus==2}">&#xe790;</span>
+            <span @click='circular' class='iconfont' :class="{active:shapeStatus==3}">&#xe80c;</span>
+        </div>
+        <!--填充色-->
+        <div id="canvas-bgColor">
+          <h5>填充色</h5>
+          <p>
+              <input type="color" name="" :value='config.bgColor' @input='bgHandler' ref='bgColor'>
+              <i class='iconfont' @click='clearBg' title='清除填充色'>&#xe621;</i>
+          </p>
         </div>
         <!-- 生成图像-->
         <div id="canvas-drawImage">
-          <h5>生成图像</h5>
-          <button class="drawImage" @click="getImage()">预览</button>
+          <h5>一键生成<i class='iconfont' @click.stop="getImage()" title='生成图片'>&#xe694;</i></h5>
         </div>
       </div>
     </div>
@@ -65,12 +76,303 @@
     <div id="img-box" v-show="imgUrl.length">
       <div class="img-item" v-for="src in imgUrl">
         <img :src="src">
-        <span class="fa fa-close" @click="removeImg(src)">234</span>
+        <span class="fa fa-close iconfont" @click="removeImg(src)">&#xe628;</span>
       </div>
     </div>
     <!-- <img src="@/assets/fff.jpg" alt=""> -->
   </div>
 </template>
+
+
+
+<script>
+  export default {
+    data () {
+      return {
+        colors: ['#fef4ac', '#0018ba', '#ffc200', '#f32f15', '#cccccc', '#5ab639','#000000','#eeeeee'],
+        brushs: [{
+          className: 'small fa fa-paint-brush',
+          lineWidth: 3
+        }, {
+          className: 'middle fa fa-paint-brush',
+          lineWidth: 6
+        }, {
+          className: 'big fa fa-paint-brush',
+          lineWidth: 12
+        }],
+        context: {},
+        imgUrl: [],
+        canvasMoveUse: true,
+        // 存储当前表面状态数组-上一步
+        preDrawAry: [],
+        // 存储当前表面状态数组-下一步
+        nextDrawAry: [],
+        // 中间数组
+        middleAry: [],
+        // 配置参数
+        config: {
+          lineWidth: 1,
+          lineColor: '#000',
+          shadowBlur: 2,
+          bgColor:'#fff'
+        },
+        // 记录形状
+        shapeStatus:0,
+        squarBiao:[],
+        // 直线坐标
+        lineBiao:[],
+        // 圆坐标
+        criculBiao:[]
+      }
+    },
+    created () {
+      this.$emit('setNav', '在线涂鸦画板')
+    },
+    mounted () {
+      const canvas = document.querySelector('#canvas')
+      this.context = canvas.getContext('2d')
+      this.initDraw()
+      this.setCanvasStyle()
+    },
+    destroyed () {
+    },
+    computed: {
+      controls () {
+        return [{
+          title: '上一步',
+          action: 'prev',
+          className: this.preDrawAry.length ? 'active fa fa-reply' : 'fa fa-reply',
+          text:'&#xe656;'
+        },
+        {
+          title: '下一步',
+          action: 'next',
+          className: this.nextDrawAry.length ? 'active fa fa-share' : 'fa fa-share',
+          text:'&#xe654;'
+        },
+        {
+          title: '清除',
+          action: 'clear',
+          className: (this.preDrawAry.length || this.nextDrawAry.length) ? 'active fa fa-trash' : 'fa fa-trash',
+          text:'&#xe65b;'
+        }]
+      }
+    },
+    methods: {
+      isPc () {
+        const userAgentInfo = navigator.userAgent
+        const Agents = ['Android', 'iPhone', 'SymbianOS', 'Windows Phone', 'iPad', 'iPod']
+        let flag = true
+        for (let v = 0; v < Agents.length; v++) {
+          if (userAgentInfo.indexOf(Agents[v]) > 0) {
+            flag = false
+            break
+          }
+        }
+        return flag
+      },
+      removeImg (src) {
+        this.imgUrl = this.imgUrl.filter(item => item !== src)
+      },
+      initDraw () {
+        const preData = this.context.getImageData(0, 0, 600, 400)
+        // 空绘图表面进栈
+        this.middleAry.push(preData)
+      },
+      canvasMove (e) {
+        if (this.canvasMoveUse) {
+          const t = e.target
+          let canvasX
+          let canvasY
+          if (this.isPc()) {
+            canvasX = e.clientX - t.parentNode.offsetLeft
+            canvasY = e.clientY - t.parentNode.offsetTop
+          } else {
+            canvasX = e.changedTouches[0].clientX - t.parentNode.offsetLeft
+            canvasY = e.changedTouches[0].clientY - t.parentNode.offsetTop
+          }
+          if(this.shapeStatus==0){
+            this.context.lineTo(canvasX, canvasY)
+            this.context.stroke()
+          }
+        }
+      },
+      beginPath (e) {
+        const canvas = document.querySelector('#canvas')
+        if (e.target !== canvas) {
+          this.context.beginPath()
+        }
+      },
+      // 清除填充色
+      clearBg(){
+        this.config.bgColor='';
+      },
+      // 背景颜色填充
+      bgHandler(){
+        this.config.bgColor = this.$refs.bgColor.value;
+      },
+      // 画笔绘制
+      brushHandler(){
+        //关闭其他
+        this.shapeStatus=0;
+      },
+      // 绘制直线
+      strightLine(){
+        this.shapeStatus=1;
+      },
+      // 绘制矩形
+      rectangle(){
+        this.shapeStatus=2;
+      },
+      // 绘制圆
+      circular(){
+        this.shapeStatus=3;
+      },
+      // mouseup
+      canvasUp (e) {
+        const preData = this.context.getImageData(0, 0, 600, 400)
+        if (!this.nextDrawAry.length) {
+          // 当前绘图表面进栈
+          this.middleAry.push(preData)
+        } else {
+          this.middleAry = []
+          this.middleAry = this.middleAry.concat(this.preDrawAry)
+          this.middleAry.push(preData)
+          this.nextDrawAry = []
+        }
+        const t = e.target;
+        if(this.shapeStatus==1){
+          // 记录结束坐标
+          this.lineBiao[2] = e.clientX - t.parentNode.offsetLeft;
+          this.lineBiao[3] = e.clientY - t.parentNode.offsetTop;
+          // 绘制直线
+          this.context.moveTo (this.lineBiao[0],this.lineBiao[1]);
+          this.context.lineTo (this.lineBiao[2],this.lineBiao[3]);
+          this.context.stroke();               //进
+        }else if(this.shapeStatus==2){
+          this.squarBiao[2] = e.clientX - t.parentNode.offsetLeft-this.squarBiao[0];
+          this.squarBiao[3] = e.clientY - t.parentNode.offsetTop-this.squarBiao[1];
+          // 填充颜色
+          this.context.fillStyle = this.config.bgColor
+          // 绘制矩形
+          this.context.rect(...this.squarBiao);
+          this.context.fill();
+        }else if(this.shapeStatus==3){
+          this.criculBiao[2] = e.clientX - t.parentNode.offsetLeft;
+          this.criculBiao[3] = e.clientY - t.parentNode.offsetTop;
+          // 填充颜色
+          this.context.fillStyle = this.config.bgColor
+          //求两个点之间的距离
+          let numX = Math.pow((this.criculBiao[0]-this.criculBiao[2]),2),
+              numY = Math.pow((this.criculBiao[1]-this.criculBiao[3]),2);
+          let redius = Math.ceil(Math.sqrt(numX+numY));
+          // 绘制圆
+          this.context.arc(this.criculBiao[0],this.criculBiao[1],redius,0,2*Math.PI);
+          this.context.stroke();
+          this.context.fill();
+        }
+        this.canvasMoveUse = false
+      },
+      // mousedown
+      canvasDown (e) {
+        this.canvasMoveUse = true
+        // client是基于整个页面的坐标
+        // offset是cavas距离顶部以及左边的距离
+        const canvasX = e.clientX - e.target.parentNode.offsetLeft
+        const canvasY = e.clientY - e.target.parentNode.offsetTop
+        this.setCanvasStyle()
+        // 清除子路径
+        if(this.shapeStatus==1){
+          // 绘制直线
+          this.lineBiao[0] = canvasX;
+          this.lineBiao[1] = canvasY;
+        }else if(this.shapeStatus==2){
+          // 记录矩形的坐标
+          this.squarBiao[0] = canvasX;
+          this.squarBiao[1] = canvasY;
+        }else if(this.shapeStatus==3){
+          // 记录圆坐标
+          this.criculBiao[0] = canvasX;
+          this.criculBiao[1] = canvasY;
+        }else{
+          this.context.moveTo(canvasX, canvasY)
+        }
+        this.context.beginPath()
+        // 当前绘图表面状态
+        const preData = this.context.getImageData(0, 0, 600, 400)
+        // 当前绘图表面进栈
+        this.preDrawAry.push(preData)
+      },
+      // 设置颜色
+      setColor (color) {
+        this.config.lineColor = color
+      },
+      // 设置笔刷大小
+      setBrush (type) {
+        this.config.lineWidth = type
+      },
+      // 操作
+      controlCanvas (action) {
+        switch (action) {
+          case 'prev':
+            if (this.preDrawAry.length) {
+              const popData = this.preDrawAry.pop()
+              const midData = this.middleAry[this.preDrawAry.length + 1]
+              this.nextDrawAry.push(midData)
+              this.context.putImageData(popData, 0, 0)
+            }
+            break
+          case 'next':
+            if (this.nextDrawAry.length) {
+              const popData = this.nextDrawAry.pop()
+              const midData = this.middleAry[this.middleAry.length - this.nextDrawAry.length - 2]
+              this.preDrawAry.push(midData)
+              this.context.putImageData(popData, 0, 0)
+            }
+            break
+          case 'clear':
+            this.context.clearRect(0, 0, this.context.canvas.width, this.context.canvas.height)
+            this.preDrawAry = []
+            this.nextDrawAry = []
+            this.middleAry = [this.middleAry[0]]
+            break
+        }
+      },
+      // 生成图片
+      getImage () {
+        const canvas = document.querySelector('#canvas')
+        const src = URL.createObjectURL(this.dataURLtoBlob(canvas.toDataURL('image/png')))
+        let reader = new FileReader();
+        // 表单 对象
+        console.dir(src)
+        this.imgUrl.push(src)
+        if (!this.isPc()) {
+          window.location.href = src
+        }
+      },
+      //base64转blob
+      dataURLtoBlob(dataurl) {
+        let arr = dataurl.split(',');
+        let mime = arr[0].match(/:(.*?);/)[1];
+        let bstr = atob(arr[1]);
+        let n = bstr.length;
+        let u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new Blob([u8arr], { type: mime });
+      },
+      // 设置绘画配置
+      setCanvasStyle () {
+        this.context.lineWidth = this.config.lineWidth
+        this.context.shadowBlur = this.config.shadowBlur
+        this.context.shadowColor = this.config.lineColor
+        this.context.strokeStyle = this.config.lineColor
+
+      }
+    }
+  }
+</script>
 
 <style>
   @media screen and (max-width: 700px) {
@@ -130,7 +432,7 @@
     display: block;
   }
   #img-box .img-item .fa:hover {
-    color: #f2849e;
+    color: #0af;
   }
   #img-box img {
     border: 1px #ccc solid;
@@ -195,301 +497,31 @@
 
   #canvas-control span{
     display: inline-block;
-    font-size: 14px;
     width: 20px;
     height: 15px;
     margin-left: 10px;
     cursor: pointer;
+
   }
-  #canvas-control .active,
+  #canvas-control span.iconfont{
+    font-size:16px;
+    /* color:#999; */
+  }
+  #canvas-control span.iconfont.active{
+    color:#0af;
+  }
+  #canvas-shape span.iconfont.active{
+    color:#0af;
+  }
   #canvas-brush .active {
-    color: #f2849e;
+    color: #0af;
   }
-  .drawImage {
-    width: 100px;
-    height: 30px;
-    font-size: 12px;
-    line-height: 30px;
+  #canvas-drawImage h5{
+    cursor: pointer;
+  }
+  #canvas-drawImage i.iconfont{
+    color:#0af;
+    margin-left: 5px;
+    text-align: justify;
   }
 </style>
-
-<script>
-  export default {
-    data () {
-      return {
-        colors: ['#fef4ac', '#0018ba', '#ffc200', '#f32f15', '#cccccc', '#5ab639','#000000','#eeeeee'],
-        brushs: [{
-          className: 'small fa fa-paint-brush',
-          lineWidth: 3
-        }, {
-          className: 'middle fa fa-paint-brush',
-          lineWidth: 6
-        }, {
-          className: 'big fa fa-paint-brush',
-          lineWidth: 12
-        }],
-        context: {},
-        imgUrl: [],
-        canvasMoveUse: true,
-        // 存储当前表面状态数组-上一步
-        preDrawAry: [],
-        // 存储当前表面状态数组-下一步
-        nextDrawAry: [],
-        // 中间数组
-        middleAry: [],
-        // 配置参数
-        config: {
-          lineWidth: 1,
-          lineColor: '#000',
-          shadowBlur: 2
-        },
-        line:false,
-        squar:false,
-        cricul:false,
-        squarBiao:[],
-        // 直线坐标
-        lineBiao:[],
-        // 圆坐标
-        criculBiao:[]
-      }
-    },
-    created () {
-      this.$emit('setNav', '在线涂鸦画板')
-    },
-    mounted () {
-      const canvas = document.querySelector('#canvas')
-      this.context = canvas.getContext('2d')
-      this.initDraw()
-      this.setCanvasStyle()
-      // document.querySelector('#footer').classList.add('hide-footer')
-      // document.querySelector('body').classList.add('fix-body')
-    },
-    destroyed () {
-      // document.querySelector('#footer').classList.remove('hide-footer')
-      // document.querySelector('body').classList.remove('fix-body')
-    },
-    computed: {
-      controls () {
-        return [{
-          title: '上一步',
-          action: 'prev',
-          className: this.preDrawAry.length ? 'active fa fa-reply' : 'fa fa-reply'
-        }, {
-          title: '下一步',
-          action: 'next',
-          className: this.nextDrawAry.length ? 'active fa fa-share' : 'fa fa-share'
-        }, {
-          title: '清除',
-          action: 'clear',
-          className: (this.preDrawAry.length || this.nextDrawAry.length) ? 'active fa fa-trash' : 'fa fa-trash'
-        }]
-      }
-    },
-    methods: {
-      isPc () {
-        const userAgentInfo = navigator.userAgent
-        const Agents = ['Android', 'iPhone', 'SymbianOS', 'Windows Phone', 'iPad', 'iPod']
-        let flag = true
-        for (let v = 0; v < Agents.length; v++) {
-          if (userAgentInfo.indexOf(Agents[v]) > 0) {
-            flag = false
-            break
-          }
-        }
-        return flag
-      },
-      removeImg (src) {
-        this.imgUrl = this.imgUrl.filter(item => item !== src)
-      },
-      initDraw () {
-        const preData = this.context.getImageData(0, 0, 600, 400)
-        // 空绘图表面进栈
-        this.middleAry.push(preData)
-      },
-      canvasMove (e) {
-        if (this.canvasMoveUse) {
-
-          const t = e.target
-          let canvasX
-          let canvasY
-          if (this.isPc()) {
-            canvasX = e.clientX - t.parentNode.offsetLeft
-            canvasY = e.clientY - t.parentNode.offsetTop
-          } else {
-            canvasX = e.changedTouches[0].clientX - t.parentNode.offsetLeft
-            canvasY = e.changedTouches[0].clientY - t.parentNode.offsetTop
-          }
-        }
-      },
-      beginPath (e) {
-        const canvas = document.querySelector('#canvas')
-        if (e.target !== canvas) {
-          this.context.beginPath()
-        }
-      },
-      // 绘制直线
-      strightLine(){
-        // 开启直线
-        this.line=true;
-      },
-      // 绘制矩形
-      rectangle(){
-        this.squar = true;
-      },
-      // 绘制圆
-      circular(){
-        this.cricul = true;
-      },
-      
-      // mouseup
-      canvasUp (e) {
-        const preData = this.context.getImageData(0, 0, 600, 400)
-        if (!this.nextDrawAry.length) {
-          // 当前绘图表面进栈
-          this.middleAry.push(preData)
-        } else {
-          this.middleAry = []
-          this.middleAry = this.middleAry.concat(this.preDrawAry)
-          this.middleAry.push(preData)
-          this.nextDrawAry = []
-        }
-        const t = e.target
-        if(this.line){
-          this.lineBiao[2] = e.clientX - t.parentNode.offsetLeft;
-          this.lineBiao[3] = e.clientY - t.parentNode.offsetTop;
-          console.log(e.clientX-t.parentNode.offsetTop)
-          this.context.lineTo (this.lineBiao[2],this.lineBiao[3]);
-           this.context.stroke();
-          // 当连接成为一条直线后canvas重新绘制
-        }else if(this.squar){
-          this.squarBiao[2] = e.clientX - t.parentNode.offsetLeft-this.squarBiao[0];
-          this.squarBiao[3] = e.clientY - t.parentNode.offsetTop-this.squarBiao[1];
-          // 绘制矩形
-          this.context.strokeRect(...this.squarBiao);
-        }else if(this.cricul){
-          this.criculBiao[2] = e.clientX - t.parentNode.offsetLeft;
-          this.criculBiao[3] = e.clientY - t.parentNode.offsetTop;
-          //求两个点之间的距离
-          let numX = Math.pow((this.criculBiao[0]-this.criculBiao[2]),2),
-              numY = Math.pow((this.criculBiao[1]-this.criculBiao[3]),2);
-          let redius = Math.ceil(Math.sqrt(numX+numY));
-          // 绘制圆
-          this.context.arc(this.criculBiao[0],this.criculBiao[1],redius,0,2*Math.PI);
-          this.context.stroke();
-        }
-        this.canvasMoveUse = false
-      },
-      // mousedown
-      canvasDown (e) {
-        this.canvasMoveUse = true
-        // client是基于整个页面的坐标
-        // offset是cavas距离顶部以及左边的距离
-        const canvasX = e.clientX - e.target.parentNode.offsetLeft
-        const canvasY = e.clientY - e.target.parentNode.offsetTop
-        this.setCanvasStyle()
-        // 清除子路径
-        if(this.line){
-          this.lineBiao[0] = canvasX;
-          this.lineBiao[1] = canvasY;
-          this.context.moveTo (canvasX,canvasY)
-          this.context.strokeStyle = "red"
-          this.context.lineWidth = 3;
-        }else if(this.squar){
-          // 记录矩形的坐标
-          this.squarBiao[0] = canvasX;
-          this.squarBiao[1] = canvasY;
-        }else if(this.cricul){
-          // 记录圆坐标
-          this.criculBiao[0] = canvasX;
-          this.criculBiao[1] = canvasY;
-        }else{
-          this.context.moveTo(canvasX, canvasY)
-        }
-        this.context.beginPath()
-        // 当前绘图表面状态
-        const preData = this.context.getImageData(0, 0, 600, 400)
-        // 当前绘图表面进栈
-        this.preDrawAry.push(preData)
-      },
-      // 设置颜色
-      setColor (color) {
-        this.config.lineColor = color
-      },
-      // 设置笔刷大小
-      setBrush (type) {
-        this.config.lineWidth = type
-      },
-      // 操作
-      controlCanvas (action) {
-        switch (action) {
-          case 'prev':
-            if (this.preDrawAry.length) {
-              const popData = this.preDrawAry.pop()
-              const midData = this.middleAry[this.preDrawAry.length + 1]
-              this.nextDrawAry.push(midData)
-              this.context.putImageData(popData, 0, 0)
-            }
-            break
-          case 'next':
-            if (this.nextDrawAry.length) {
-              const popData = this.nextDrawAry.pop()
-              const midData = this.middleAry[this.middleAry.length - this.nextDrawAry.length - 2]
-              this.preDrawAry.push(midData)
-              this.context.putImageData(popData, 0, 0)
-            }
-            break
-          case 'clear':
-            this.context.clearRect(0, 0, this.context.canvas.width, this.context.canvas.height)
-            this.preDrawAry = []
-            this.nextDrawAry = []
-            this.middleAry = [this.middleAry[0]]
-            break
-        }
-      },
-      // 计算距离
-      GetDistance(lat1,  lng1,  lat2,  lng2){
-        var radLat1 = lat1*Math.PI / 180.0;
-        var radLat2 = lat2*Math.PI / 180.0;
-        var a = radLat1 - radLat2;
-        var  b = lng1*Math.PI / 180.0 - lng2*Math.PI / 180.0;
-        var s = 2 * Math.asin(Math.sqrt(Math.pow(Math.sin(a/2),2) +
-        Math.cos(radLat1)*Math.cos(radLat2)*Math.pow(Math.sin(b/2),2)));
-        s = s *6378.137 ;// EARTH_RADIUS;
-        s = Math.round(s * 10000) / 10000;
-        return s;
-      },
-      // 生成图片
-      getImage () {
-        const canvas = document.querySelector('#canvas')
-        const src = URL.createObjectURL(this.dataURLtoBlob(canvas.toDataURL('image/png')))
-        let reader = new FileReader();
-        // 表单 对象
-        console.dir(src)
-        this.imgUrl.push(src)
-        if (!this.isPc()) {
-          // window.open(`data:text/plain,${src}`)
-          window.location.href = src
-        }
-      },
-      //base64转blob
-      dataURLtoBlob(dataurl) {
-        let arr = dataurl.split(',');
-        let mime = arr[0].match(/:(.*?);/)[1];
-        let bstr = atob(arr[1]);
-        let n = bstr.length;
-        let u8arr = new Uint8Array(n);
-        while (n--) {
-          u8arr[n] = bstr.charCodeAt(n);
-        }
-        return new Blob([u8arr], { type: mime });
-      },
-      // 设置绘画配置
-      setCanvasStyle () {
-        this.context.lineWidth = this.config.lineWidth
-        this.context.shadowBlur = this.config.shadowBlur
-        this.context.shadowColor = this.config.lineColor
-        this.context.strokeStyle = this.config.lineColor
-      }
-    }
-  }
-</script>
