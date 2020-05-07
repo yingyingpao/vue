@@ -31,7 +31,9 @@ export default {
   },
   mounted () {
     // 接受父页面发来的信息
-    window.addEventListener("message", this.handleMessage) // 子接收方式二参数
+    // window.addEventListener("message", this.handleMessage)
+    // 通过地址栏接收参数
+    this.iframeData = this.$route.query
   }
 };
 </script>
