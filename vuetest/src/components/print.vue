@@ -114,7 +114,7 @@
           lineWidth: 1,
           lineColor: '#000',
           shadowBlur: 2,
-          bgColor:'#fff'
+          bgColor:''
         },
         // 记录形状
         shapeStatus:0,
@@ -461,12 +461,12 @@
   #control div{
     padding: 5px;
   }
-  #canvas-bgColor ul,#canvas-color ul{
+  ,#canvas-color ul{
     overflow: hidden;
     margin: 0;
     padding: 0;
   }
-  #canvas-bgColor ul li,#canvas-color ul li{
+#canvas-color ul li{
     float: left;
     display: inherit;
     width: 13px;
@@ -509,6 +509,14 @@
   }
   #canvas-control span.iconfont.active{
     color:#0af;
+  }
+  #canvas-shape span{
+    cursor:pointer;
+  }
+  #canvas-bgColor p .iconfont{
+    cursor: pointer;
+    margin-left:4px;
+    font-size:14px;
   }
   #canvas-shape span.iconfont.active{
     color:#0af;
