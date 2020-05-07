@@ -26,13 +26,6 @@ export default {
     },
     handleMessage (event) {
       console.log('父接受子传递过来的参数',event.data)
-      var data = event.data
-      switch (data.cmd) {
-          case 'returnFormJson':
-            // 处理业务逻辑
-            this.childData = data;
-            break;
-      }
     }
   },
   mounted () {
