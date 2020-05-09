@@ -62,7 +62,7 @@
         <div id="canvas-bgColor">
           <h5>填充色</h5>
           <p>
-              <input type="color" name="" :value='config.bgColor' @input='bgHandler' ref='bgColor'>
+              <input type="color" name="" value='config.bgColo' @input='bgHandler' ref='bgColor'>
               <i class='iconfont' @click='clearBg' title='清除填充色'>&#xe621;</i>
           </p>
         </div>
@@ -112,17 +112,19 @@
         // 配置参数
         config: {
           lineWidth: 1,
-          lineColor: '#000',
+          lineColor: '#fffff',
           shadowBlur: 2,
           bgColor:''
         },
         // 记录形状
-        shapeStatus:0,
+        shapeStatus:7,
         squarBiao:[],
         // 直线坐标
         lineBiao:[],
         // 圆坐标
-        criculBiao:[]
+        criculBiao:[],
+        // 记录画笔状态，禁止mouseMove之后就开始画
+        printStatus:false
       }
     },
     created () {
@@ -192,8 +194,11 @@
             canvasY = e.changedTouches[0].clientY - t.parentNode.offsetTop
           }
           if(this.shapeStatus==0){
-            this.context.lineTo(canvasX, canvasY)
-            this.context.stroke()
+            if(this.printStatus){
+              console.log(3333333333333333,this.printStatus)
+              this.context.lineTo(canvasX, canvasY)
+              this.context.stroke()
+            }
           }
         }
       },
@@ -241,7 +246,9 @@
           this.nextDrawAry = []
         }
         const t = e.target;
-        if(this.shapeStatus==1){
+        if(this.shapeStatus==0){
+          this.printStatus=false;
+        }else if(this.shapeStatus==1){
           // 记录结束坐标
           this.lineBiao[2] = e.clientX - t.parentNode.offsetLeft;
           this.lineBiao[3] = e.clientY - t.parentNode.offsetTop;
@@ -256,7 +263,11 @@
           this.context.fillStyle = this.config.bgColor
           // 绘制矩形
           this.context.rect(...this.squarBiao);
-          this.context.fill();
+          this.context.stroke();
+          console.log(this.config.bgColor)
+          if(this.config.bgColor!=''){
+            this.context.fill();
+          }
         }else if(this.shapeStatus==3){
           this.criculBiao[2] = e.clientX - t.parentNode.offsetLeft;
           this.criculBiao[3] = e.clientY - t.parentNode.offsetTop;
@@ -269,7 +280,9 @@
           // 绘制圆
           this.context.arc(this.criculBiao[0],this.criculBiao[1],redius,0,2*Math.PI);
           this.context.stroke();
-          this.context.fill();
+          if(this.config.bgColor!=''){
+            this.context.fill();
+          }
         }
         this.canvasMoveUse = false
       },
@@ -282,7 +295,10 @@
         const canvasY = e.clientY - e.target.parentNode.offsetTop
         this.setCanvasStyle()
         // 清除子路径
-        if(this.shapeStatus==1){
+        if(this.shapeStatus==0){
+          // 开启画笔状态
+          this.printStatus  = true;
+        }else if(this.shapeStatus==1){
           // 绘制直线
           this.lineBiao[0] = canvasX;
           this.lineBiao[1] = canvasY;
@@ -313,9 +329,11 @@
       },
       // 操作
       controlCanvas (action) {
+        console.log(action,this.preDrawAry)
         switch (action) {
           case 'prev':
             if (this.preDrawAry.length) {
+              console.log(3333333333333333)
               const popData = this.preDrawAry.pop()
               const midData = this.middleAry[this.preDrawAry.length + 1]
               this.nextDrawAry.push(midData)
@@ -324,6 +342,7 @@
             break
           case 'next':
             if (this.nextDrawAry.length) {
+              console.log('下一步')
               const popData = this.nextDrawAry.pop()
               const midData = this.middleAry[this.middleAry.length - this.nextDrawAry.length - 2]
               this.preDrawAry.push(midData)
@@ -368,7 +387,6 @@
         this.context.shadowBlur = this.config.shadowBlur
         this.context.shadowColor = this.config.lineColor
         this.context.strokeStyle = this.config.lineColor
-
       }
     }
   }
@@ -408,7 +426,7 @@
     margin-top: 30px;
   }
   .draw h5 {
-    margin-bottom: 10px;
+    margin-top: 10px;
   }
   #img-box {
     flex: 1;
@@ -458,10 +476,7 @@
     height: 400px;
     margin-left: 4px;
   }
-  #control div{
-    padding: 5px;
-  }
-  ,#canvas-color ul{
+  #canvas-color ul{
     overflow: hidden;
     margin: 0;
     padding: 0;

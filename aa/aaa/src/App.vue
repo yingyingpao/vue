@@ -10,9 +10,9 @@ export default {
   data () {
     return {
       // 通过信息传参
-      src: 'http://localhost:8080/#/'
+      // src: 'http://localhost:8080/#/'
       // 地址栏传参
-      // src: 'http://localhost:8080/#/?aa=333',
+      src: 'http://localhost:8080/#/?aa=333',
     }
   },
   methods: {

@@ -49,3 +49,14 @@ ES6允许直接写入变量和函数，作为对象的属性和方法.
 	console.log(aa) //baz
 	let baz = {aa}
 	console.log(baz) //{foo:'baz'}
+
+# 字符串 #
+## 字符串方法扩展 ##
+1. includes
+2. startsWith
+3. endsWidth
+4. repeat
+5. padStart
+6. padEnd
+7. trimStart(trimLeft)
+8. trimEnd(trimRight)

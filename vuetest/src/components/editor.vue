@@ -20,7 +20,6 @@ export default {
   data: () => ({
     content: ""
   }),
-
   methods: {
     onEditorBlur(quill) {
       console.log("editor blur!", quill);
